@@ -1,0 +1,53 @@
+import React, {useState, useEffect, useRef} from 'react'
+
+export default function Ticker(): JSX.Element {
+  const [elements, setElemensts] = useState(["A","B", "C", "D", "E"])
+  const [input, setInput] = useState("")
+  const songs = useRef([])
+
+  const rotateElements = () => {
+    console.warn(songs.current)
+    let elShifted = elements.shift()
+    if(songs.current.length > 0)
+      elements.push(songs.current.shift())
+    else
+      elements.push(elShifted)
+    setElemensts([...elements])
+   }
+
+  const onInputChange = (event:any) => {
+    setInput(event.target.value)
+    console.warn(event.target.value)
+   }
+
+  useEffect(() => {
+    setInterval(rotateElements, 1000)
+  }, [])
+
+  useEffect(() => {
+    if (input != ""){
+      const delayDebounceFn = setTimeout(() => {
+        console.error(input)
+        fetch('https://itunes.apple.com/search?term=' + input)
+        .then( res => res.json())
+        .then( json => {
+          songs.current = json.results.map(j => j.collectionName).sort().slice(0,5)
+        }
+        )
+      }, 250)
+
+      return () => clearTimeout(delayDebounceFn)
+    }
+  }, [input])
+
+  return (
+    <>
+      <input onChange={onInputChange}></input>
+      <div className="card">
+        {
+          elements.map(e => <div key={e}> {e} </div>)
+        }
+      </div>
+    </>
+  )
+}
